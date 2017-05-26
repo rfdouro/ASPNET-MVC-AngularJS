@@ -1,0 +1,161 @@
+﻿@{
+    ViewBag.Title = "Cadastro de Pessoas";
+    Layout = "~/Views/Templates/_Layout1.cshtml";
+}
+
+
+<h1>@ViewBag.Title</h1>
+
+
+<div ng-app="myApp" ng-controller="customersCtrl" data-ng-init="filtraN()">
+
+    <div ng-show="loading" class="loading" style="z-index: 10000; position: absolute; height: 100%; width: 100%; left: 0; top: 0; background-color: #498f98">
+        <img src="~/Content/img/giphy.gif" />LOADING...</div>
+    @*  *@
+
+    <button class="waves-effect waves-light btn" ng-click="abreAdiciona()">Adiciona</button>
+    <div id="divAdiciona" style="visibility: hidden">
+        <input type="text" id="nome" ng-model="nome" style="width: 200px" />
+        <button class="waves-effect waves-light btn" ng-click="adicionaN()">Adiciona</button>
+        <button class="btn" ng-click="fechaAdiciona()">Cancelar</button>
+    </div>
+    <br />
+
+    <input type="text" ng-model="nomeFiltro" style="width: 200px" />
+
+    <button class="btn" ng-click="filtraN()">Filtra</button>
+    <button class="btn" ng-click="limpaFiltro()">Todos</button>
+
+    <br />
+
+    <div id="divAltera" style="visibility: hidden">
+        <input type="hidden" ng-model="idEdita" />
+        <input type="text" ng-model="nomeEdita" style="width: 200px" />
+
+        <button class="btn" ng-click="confirmaEdita()">Altera</button>
+        <button class="btn" ng-click="fechaAlteracao()">Cancelar</button>
+    </div>
+
+
+    <div id="divLista" style="height: 150px; width:100%; overflow-y:auto">
+        <table style="width: 90%" id="tabela" class="mdl-data-table">
+            <thead>
+                <tr>
+                    <td style="width: 70%">Nome</td>
+                    <td style="width: 30%">Ações</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="x in dados">
+                    <td>{{x.nome}}</td>
+                    <td><a class="btn" href="#" ng-click="exclui(x.id)">Excluir</a>
+                        <a class="btn" href="#" ng-click="abreEdita(x.id)">Alteração</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    var app = angular.module('myApp', []);
+
+    app.controller('customersCtrl', function ($scope, $http) {
+
+        $scope.numReg = 2;
+
+        $scope.adicionaN = function () {
+            $http({
+                method: "POST",
+                url: "http://localhost:53819/Pessoa/Create",
+                data: { "nome": $scope.nome }
+            }).then(function mySucces(response) {
+                $scope.filtraN();
+                $scope.fechaAdiciona();
+            }, function myError(response) {
+            });
+        }
+
+        $scope.filtraN = function () {
+            //$scope.loading = true;
+            $http({
+                method: "POST",
+                url: "http://localhost:53819/Pessoa/ListaJS",
+                data: { "s": $scope.nomeFiltro }
+            }).then(function (response) {
+                $scope.dados = response.data;
+                //$scope.loading = false;
+            });
+        }
+
+        $scope.limpaFiltro = function () {
+            $scope.nomeFiltro = "";
+            $scope.filtraN();
+        }
+
+        $scope.abreAdiciona = function () {
+            $scope.nome = "";
+            var div = angular.element(document.getElementById('divAdiciona'));
+            div.css('visibility', 'visible');
+            var element = document.getElementById('nome');
+            element.focus();
+        }
+
+        $scope.fechaAdiciona = function () {
+            var div = angular.element(document.getElementById('divAdiciona'));
+            div.css('visibility', 'hidden');
+        }
+
+        $scope.fechaAlteracao = function () {
+            $scope.idEdita = "";
+            $scope.nomeEdita = "";
+            var div = angular.element(document.getElementById('divAltera'));
+            div.css('visibility', 'hidden');
+        }
+
+        $scope.abreEdita = function (id) {
+            $http({
+                method: "GET",
+                url: "http://localhost:53819/Pessoa/GetJS/" + id,
+            }).then(function (response) {
+                $scope.idEdita = response.data[0].id;
+                $scope.nomeEdita = response.data[0].nome;
+                var divAltera = angular.element(document.getElementById('divAltera'));
+                divAltera.css('visibility', 'visible');
+            });
+        }
+
+        $scope.confirmaEdita = function () {
+            $http({
+                method: "POST",
+                url: "http://localhost:53819/Pessoa/Edit",
+                data: { "id": $scope.idEdita, "nome": $scope.nomeEdita }
+            }).then(function mySucces(response) {
+                $scope.filtraN();
+                $scope.fechaAlteracao();
+            }, function myError(response) {
+            });
+        }
+
+        $scope.adiciona = function () {
+            $http({
+                method: "POST",
+                url: "http://localhost:53819/Pessoa/Create",
+                data: { "nome": "Teste" }
+            }).then(function mySucces(response) {
+                $scope.filtraN();
+            }, function myError(response) {
+            });
+        }
+
+        $scope.exclui = function (id) {
+            $http({
+                method: "POST",
+                url: "http://localhost:53819/Pessoa/Excluir/" + id
+            }).then(function mySucces(response) {
+                $scope.filtraN();
+            }, function myError(response) {
+            });
+        }
+    });
+</script>
